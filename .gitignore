@@ -1,0 +1,5 @@
+/var/tmp/megacli_cache/
+*.swp
+*.swo
+*~
+.claude/

@@ -1,0 +1,650 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 707993ccfa03430dad06f92a8e0a68ea
+      name: 'Templates/Storage'
+  templates:
+    - uuid: cf357d6c85304b6d814fdc1783ee7e8d
+      template: 'MegaCLI by Agent 2'
+      name: 'MegaCLI by Agent 2'
+      description: |
+        MegaCLI RAID monitoring via Zabbix Agent 2 active checks.
+        Discovers adapters, virtual drives, physical disks, and BBU.
+        Requires: zabbix_megacli.sh + cron cache job + UserParameter config.
+      groups:
+        - name: 'Templates/Storage'
+
+      discovery_rules:
+        # ============================================================
+        # Adapter Discovery
+        # ============================================================
+        - uuid: 25ff2eefbfbc4b4fa9f31d798da0d5c7
+          name: 'RAID Adapter Discovery'
+          type: ZABBIX_PASSIVE
+          key: 'megacli.discover[adapters]'
+          delay: 1h
+          lifetime: 7d
+          item_prototypes:
+            - uuid: 98b27e36f4814aedb792950b88f55c00
+              name: 'Adapter {#ADAPTER_ID}: Product Name'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.adapter[{#ADAPTER_ID},product_name]'
+              delay: 1h
+              value_type: CHAR
+              description: 'RAID controller product name'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: adapter
+            - uuid: 83fd2c0946574d3ab184816bc9065b6e
+              name: 'Adapter {#ADAPTER_ID}: Serial Number'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.adapter[{#ADAPTER_ID},serial]'
+              delay: 1d
+              value_type: CHAR
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: adapter
+            - uuid: 2bd2e0408039411a95ec2ce66614d86a
+              name: 'Adapter {#ADAPTER_ID}: Firmware Version'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.adapter[{#ADAPTER_ID},fw_version]'
+              delay: 1d
+              value_type: CHAR
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: adapter
+            - uuid: 4c95065f47d54192a0e67e75e0b5999d
+              name: 'Adapter {#ADAPTER_ID}: Degraded VDs'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.adapter[{#ADAPTER_ID},degraded]'
+              delay: 5m
+              value_type: UNSIGNED
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: raid
+            - uuid: 18f438dd4cf8423f91a651b224d0301e
+              name: 'Adapter {#ADAPTER_ID}: Offline VDs'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.adapter[{#ADAPTER_ID},offline]'
+              delay: 5m
+              value_type: UNSIGNED
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: raid
+            - uuid: 825baa825ca942a0a9517c4b56bbe710
+              name: 'Adapter {#ADAPTER_ID}: Critical Disks'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.adapter[{#ADAPTER_ID},critical_disks]'
+              delay: 5m
+              value_type: UNSIGNED
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: raid
+                - tag: disk
+            - uuid: a22706a710dd4ab8a4e7888e84d26dda
+              name: 'Adapter {#ADAPTER_ID}: Failed Disks'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.adapter[{#ADAPTER_ID},failed_disks]'
+              delay: 5m
+              value_type: UNSIGNED
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: raid
+                - tag: disk
+            - uuid: 9833fe9fcdca428e899981374b3716f8
+              name: 'Adapter {#ADAPTER_ID}: ROC Temperature'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.adapter[{#ADAPTER_ID},roc_temp]'
+              delay: 5m
+              value_type: UNSIGNED
+              units: '°C'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: adapter
+                - tag: temperature
+            - uuid: 41e5898431c54ff1b4d72988eab2166e
+              name: 'Adapter {#ADAPTER_ID}: Memory Correctable Errors'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.adapter[{#ADAPTER_ID},mem_correctable]'
+              delay: 5m
+              value_type: UNSIGNED
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: adapter
+                - tag: memory
+            - uuid: f8bb894de383493b83f40c26a673d1af
+              name: 'Adapter {#ADAPTER_ID}: Memory Uncorrectable Errors'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.adapter[{#ADAPTER_ID},mem_uncorrectable]'
+              delay: 5m
+              value_type: UNSIGNED
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: adapter
+                - tag: memory
+          trigger_prototypes:
+            - uuid: 788d0ce396034e3695f335a539a57f02
+              expression: 'last(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},degraded])>0'
+              name: 'Adapter {#ADAPTER_ID}: Degraded virtual drive(s)'
+              priority: HIGH
+            - uuid: 62214f71fa104fa883b36179b2a0255d
+              expression: 'last(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},offline])>0'
+              name: 'Adapter {#ADAPTER_ID}: Offline virtual drive(s)'
+              priority: DISASTER
+            - uuid: 0ea6514819394ad682638fffca17c244
+              expression: 'last(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},critical_disks])>0'
+              name: 'Adapter {#ADAPTER_ID}: Critical disk(s) detected'
+              priority: HIGH
+            - uuid: a3299ec81d6243949af72597c5ccbbfa
+              expression: 'last(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},failed_disks])>0'
+              name: 'Adapter {#ADAPTER_ID}: Failed disk(s) detected'
+              priority: DISASTER
+            - uuid: 35f2db4f3c19493b905b8767590b34a2
+              expression: 'last(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},roc_temp])>=98'
+              name: 'Adapter {#ADAPTER_ID}: ROC temperature critical ({ITEM.LASTVALUE}°C)'
+              priority: HIGH
+            - uuid: 579700c5ded2439b9fddfb45bf0d12c0
+              expression: 'last(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},roc_temp])>=93'
+              name: 'Adapter {#ADAPTER_ID}: ROC temperature warning ({ITEM.LASTVALUE}°C)'
+              priority: WARNING
+              dependencies:
+                - name: 'Adapter {#ADAPTER_ID}: ROC temperature critical ({ITEM.LASTVALUE}°C)'
+                  expression: 'last(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},roc_temp])>=98'
+            - uuid: d30043a3412e43bd96fbde3a60fe4a24
+              expression: 'last(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},mem_uncorrectable])>0'
+              name: 'Adapter {#ADAPTER_ID}: Uncorrectable memory errors'
+              priority: HIGH
+            - uuid: 40c380102fdb4e90ba3a4504dff2a2e8
+              expression: 'last(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},mem_correctable])>0'
+              name: 'Adapter {#ADAPTER_ID}: Correctable memory errors'
+              priority: WARNING
+            - uuid: 549192401da242c281b83828fc07774e
+              expression: 'change(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},roc_temp])>10'
+              name: 'Adapter {#ADAPTER_ID}: ROC temperature rising rapidly (+{ITEM.LASTVALUE}°C)'
+              priority: HIGH
+            - uuid: 0e4290db7bb24613924440f73670b47f
+              expression: 'nodata(/MegaCLI by Agent 2/megacli.adapter[{#ADAPTER_ID},roc_temp],15m)=1'
+              name: 'Adapter {#ADAPTER_ID}: No data received for 15 minutes'
+              priority: AVERAGE
+              description: 'MegaCLI cache script may have stopped running. Check cron job and /var/tmp/megacli_cache/'
+          graph_prototypes:
+            - uuid: bcbbd1227e9148ebb1d9cde097037335
+              name: 'Adapter {#ADAPTER_ID}: ROC Temperature'
+              graph_items:
+                - color: F63100
+                  item:
+                    host: 'MegaCLI by Agent 2'
+                    key: 'megacli.adapter[{#ADAPTER_ID},roc_temp]'
+
+        # ============================================================
+        # Virtual Drive Discovery
+        # ============================================================
+        - uuid: 7a571c8156a4494a819a73584e0c9cbd
+          name: 'RAID Virtual Drive Discovery'
+          type: ZABBIX_PASSIVE
+          key: 'megacli.discover[vd]'
+          delay: 1h
+          lifetime: 7d
+          item_prototypes:
+            - uuid: 6af7020b1c6748f98d1b377ff16e08d3
+              name: '{#VD_TYPE} {#VD_ID} on Adapter {#ADAPTER_ID}: State'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.vd[{#ADAPTER_ID},{#VD_ID},state]'
+              delay: 5m
+              value_type: CHAR
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: raid
+                - tag: virtual-drive
+            - uuid: 984588a48b0d4d7788e91209503a1883
+              name: '{#VD_TYPE} {#VD_ID} on Adapter {#ADAPTER_ID}: State (numeric)'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.vd[{#ADAPTER_ID},{#VD_ID},state_num]'
+              delay: 5m
+              value_type: UNSIGNED
+              description: '0=Optimal, 1=Degraded, 2=Offline, 3=Other'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: raid
+                - tag: virtual-drive
+            - uuid: 5d43857252134f7f8f9c8dac02ef45f9
+              name: '{#VD_TYPE} {#VD_ID} on Adapter {#ADAPTER_ID}: Cache Policy'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.vd[{#ADAPTER_ID},{#VD_ID},cache_policy]'
+              delay: 15m
+              value_type: CHAR
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: raid
+                - tag: virtual-drive
+                - tag: cache
+          trigger_prototypes:
+            - uuid: 35bee092ee694fbf935e18eff6ac7e2f
+              expression: 'last(/MegaCLI by Agent 2/megacli.vd[{#ADAPTER_ID},{#VD_ID},state_num])=1'
+              name: '{#VD_TYPE} {#VD_ID} on Adapter {#ADAPTER_ID}: DEGRADED'
+              priority: HIGH
+            - uuid: 5981cf1969b04c8782b89ba8d85df7c5
+              expression: 'last(/MegaCLI by Agent 2/megacli.vd[{#ADAPTER_ID},{#VD_ID},state_num])>=2'
+              name: '{#VD_TYPE} {#VD_ID} on Adapter {#ADAPTER_ID}: OFFLINE'
+              priority: DISASTER
+            - uuid: b826a525377e44aab63602f31cec38a5
+              expression: 'find(/MegaCLI by Agent 2/megacli.vd[{#ADAPTER_ID},{#VD_ID},cache_policy],,"like","WriteThrough")=1'
+              name: '{#VD_TYPE} {#VD_ID} on Adapter {#ADAPTER_ID}: Cache in WriteThrough mode'
+              priority: WARNING
+              description: 'Write cache disabled - may indicate BBU issue. Performance will be reduced.'
+            - uuid: 53acb34f6ae04e9b8963fcf649fa4d37
+              expression: 'change(/MegaCLI by Agent 2/megacli.vd[{#ADAPTER_ID},{#VD_ID},state])<>0'
+              name: '{#VD_TYPE} {#VD_ID} on Adapter {#ADAPTER_ID}: State changed to {ITEM.LASTVALUE}'
+              priority: WARNING
+
+        # ============================================================
+        # Physical Disk Discovery
+        # ============================================================
+        - uuid: 6013763b30784b2da2f6d195168968bb
+          name: 'RAID Physical Disk Discovery'
+          type: ZABBIX_PASSIVE
+          key: 'megacli.discover[pd]'
+          delay: 1h
+          lifetime: 7d
+          item_prototypes:
+            - uuid: d2b353d3ecd34fd0a7925d05b9bbc406
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: State'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},state]'
+              delay: 5m
+              value_type: CHAR
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: disk
+                - tag: storage
+            - uuid: 9411244799c948cd8dab9c117fb3fbba
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: State (numeric)'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},state_num]'
+              delay: 5m
+              value_type: UNSIGNED
+              description: '0=Online/Hotspare, 1=Rebuilding, 2=Failed/Offline, 3=Other'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: disk
+                - tag: storage
+            - uuid: a49a65cf3e72436f970794611eccae12
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Media Errors'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},media_errors]'
+              delay: 5m
+              value_type: UNSIGNED
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: disk
+                - tag: errors
+            - uuid: 922a8b5c06b04064bb568dd062d4124b
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Other Errors'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},other_errors]'
+              delay: 5m
+              value_type: UNSIGNED
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: disk
+                - tag: errors
+            - uuid: 30100b5d0da443749c915d4e810a050a
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Predictive Failures'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},predictive_failures]'
+              delay: 5m
+              value_type: UNSIGNED
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: disk
+                - tag: errors
+            - uuid: 8d4caa49467b47b8a71d20d920eb4d6b
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: SMART Alert'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},smart_alert]'
+              delay: 5m
+              value_type: UNSIGNED
+              description: '0=No, 1=Yes'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: disk
+                - tag: smart
+            - uuid: f399583566f84416a9882a118c1c8c29
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Temperature'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},temperature]'
+              delay: 5m
+              value_type: UNSIGNED
+              units: '°C'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: disk
+                - tag: temperature
+            - uuid: e13f991d34074d6f943df69d3f0b4088
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Media Type'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},media_type]'
+              delay: 1h
+              value_type: CHAR
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: disk
+                - tag: storage
+          trigger_prototypes:
+            - uuid: fb71410a9f9e4dcba7a78011c2aaed57
+              expression: 'last(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},state_num])=2'
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: FAILED/OFFLINE'
+              priority: DISASTER
+            - uuid: 9e81433ee1974ad985dd0ffca1f02bd5
+              expression: 'last(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},state_num])=1'
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Rebuilding'
+              priority: AVERAGE
+            - uuid: af375dc9dd424579a08386429b9f48be
+              expression: 'last(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},state_num])=3'
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Unexpected state ({ITEM.LASTVALUE})'
+              priority: WARNING
+            - uuid: f7ecaab06f974a9ba19971edaec2786a
+              expression: 'last(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},media_errors])>0'
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Media errors ({ITEM.LASTVALUE})'
+              priority: HIGH
+            - uuid: 5cccc7dfe68b40a0a11d65198f697599
+              expression: 'last(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},predictive_failures])>0'
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Predictive failure ({ITEM.LASTVALUE})'
+              priority: HIGH
+            - uuid: ac1695817f7344eaa2771ddc8b853e03
+              expression: 'last(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},smart_alert])=1'
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: SMART alert!'
+              priority: DISASTER
+            - uuid: 8c5448559d5f4978825e1a967fb21102
+              expression: 'last(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},temperature])>=60'
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Temperature critical ({ITEM.LASTVALUE}°C)'
+              priority: HIGH
+            - uuid: 657b5637cd4044f8b3088ed205a39b4e
+              expression: 'last(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},temperature])>=50'
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Temperature warning ({ITEM.LASTVALUE}°C)'
+              priority: WARNING
+              dependencies:
+                - name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Temperature critical ({ITEM.LASTVALUE}°C)'
+                  expression: 'last(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},temperature])>=60'
+            - uuid: b2f3ebf7474243c1980745eededc93fa
+              expression: 'change(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},media_errors])>0'
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: New media errors'
+              priority: HIGH
+            - uuid: c2c640551d074888b85bb35888da963e
+              expression: 'change(/MegaCLI by Agent 2/megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},other_errors])>0'
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: New other errors'
+              priority: WARNING
+          graph_prototypes:
+            - uuid: b1f378e1a58b4700b65fdc7b5158fea8
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Temperature'
+              graph_items:
+                - color: 1A7C11
+                  item:
+                    host: 'MegaCLI by Agent 2'
+                    key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},temperature]'
+            - uuid: a8d17ca88b4d480886251d6c326f7588
+              name: 'Disk [{#ENCLOSURE}:{#SLOT}] on Adapter {#ADAPTER_ID}: Error Counters'
+              graph_items:
+                - color: F63100
+                  item:
+                    host: 'MegaCLI by Agent 2'
+                    key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},media_errors]'
+                - color: FF7F00
+                  sortorder: '1'
+                  item:
+                    host: 'MegaCLI by Agent 2'
+                    key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},other_errors]'
+                - color: EFC000
+                  sortorder: '2'
+                  item:
+                    host: 'MegaCLI by Agent 2'
+                    key: 'megacli.pd[{#ADAPTER_ID},{#ENCLOSURE}:{#SLOT},predictive_failures]'
+
+        # ============================================================
+        # BBU Discovery
+        # ============================================================
+        - uuid: 8547dbf8df0a4f86b534dce21c80a2f6
+          name: 'RAID BBU Discovery'
+          type: ZABBIX_PASSIVE
+          key: 'megacli.discover[bbu]'
+          delay: 1h
+          lifetime: 7d
+          item_prototypes:
+            - uuid: 99522e00bfc44feeaf4bbe3185f0df81
+              name: 'BBU on Adapter {#ADAPTER_ID}: State'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.bbu[{#ADAPTER_ID},state]'
+              delay: 5m
+              value_type: CHAR
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: bbu
+                - tag: battery
+            - uuid: d89fc276cfeb4e4eb1366a88e9bd35b8
+              name: 'BBU on Adapter {#ADAPTER_ID}: State (numeric)'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.bbu[{#ADAPTER_ID},state_num]'
+              delay: 5m
+              value_type: UNSIGNED
+              description: '0=Optimal, 1=Learning, 2=Degraded, 3=Other'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: bbu
+                - tag: battery
+            - uuid: 20d9b195273f4ec5a66bea5f528f62b7
+              name: 'BBU on Adapter {#ADAPTER_ID}: Temperature'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.bbu[{#ADAPTER_ID},temperature]'
+              delay: 5m
+              value_type: UNSIGNED
+              units: '°C'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: bbu
+                - tag: temperature
+            - uuid: 4ea5e0cbc79b4bbd943eae03ae01f7dd
+              name: 'BBU on Adapter {#ADAPTER_ID}: Voltage'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.bbu[{#ADAPTER_ID},voltage]'
+              delay: 5m
+              value_type: UNSIGNED
+              units: mV
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: bbu
+                - tag: battery
+            - uuid: 43bf3d5f4d47414488bc6cac5c1cda55
+              name: 'BBU on Adapter {#ADAPTER_ID}: Capacitance'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.bbu[{#ADAPTER_ID},capacitance]'
+              delay: 5m
+              value_type: UNSIGNED
+              units: '%'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: bbu
+                - tag: battery
+            - uuid: b129886bb85b4ccd9a167d0350a085fb
+              name: 'BBU on Adapter {#ADAPTER_ID}: Replacement Required'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.bbu[{#ADAPTER_ID},replacement_required]'
+              delay: 5m
+              value_type: UNSIGNED
+              description: '0=No, 1=Yes'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: bbu
+                - tag: battery
+            - uuid: ced686967bc24042936cc987067357a3
+              name: 'BBU on Adapter {#ADAPTER_ID}: Pack Failing'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.bbu[{#ADAPTER_ID},pack_failing]'
+              delay: 5m
+              value_type: UNSIGNED
+              description: '0=No, 1=Yes'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: bbu
+                - tag: battery
+            - uuid: 72dfc94654424900906a3d40ce698891
+              name: 'BBU on Adapter {#ADAPTER_ID}: Pack Missing'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.bbu[{#ADAPTER_ID},pack_missing]'
+              delay: 5m
+              value_type: UNSIGNED
+              description: '0=No, 1=Yes'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: bbu
+                - tag: battery
+            - uuid: 4696fa30437742029fbc27b12c4ad72f
+              name: 'BBU on Adapter {#ADAPTER_ID}: Learn Cycle Status'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.bbu[{#ADAPTER_ID},learn_cycle_status]'
+              delay: 15m
+              value_type: CHAR
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: bbu
+                - tag: battery
+            - uuid: 515191758e3747a6a5a87e5cd95dadad
+              name: 'BBU on Adapter {#ADAPTER_ID}: Remaining Capacity Low'
+              type: ZABBIX_PASSIVE
+              key: 'megacli.bbu[{#ADAPTER_ID},remaining_capacity_low]'
+              delay: 5m
+              value_type: UNSIGNED
+              description: '0=No, 1=Yes'
+              tags:
+                - tag: megacli
+                - tag: component
+                  value: storage
+                - tag: bbu
+                - tag: battery
+          trigger_prototypes:
+            - uuid: ceb1631f3f074c50a09689dfa81c72fe
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},state_num])=2'
+              name: 'BBU on Adapter {#ADAPTER_ID}: DEGRADED'
+              priority: HIGH
+            - uuid: fe6e081170e9432d99c280ac73368b86
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},state_num])=3'
+              name: 'BBU on Adapter {#ADAPTER_ID}: Unknown state'
+              priority: AVERAGE
+            - uuid: 1cbb870347c64b4d9e1ef1db506214ed
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},state_num])=1'
+              name: 'BBU on Adapter {#ADAPTER_ID}: Learn cycle active'
+              priority: INFO
+            - uuid: 022188fb6f264134982357c30cba4da0
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},replacement_required])=1'
+              name: 'BBU on Adapter {#ADAPTER_ID}: REPLACEMENT REQUIRED'
+              priority: DISASTER
+            - uuid: 218f37acd37243c9a064772726509f87
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},pack_failing])=1'
+              name: 'BBU on Adapter {#ADAPTER_ID}: PACK ABOUT TO FAIL'
+              priority: DISASTER
+            - uuid: 671e76b41254412a8f3c5370404c0eae
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},pack_missing])=1'
+              name: 'BBU on Adapter {#ADAPTER_ID}: PACK MISSING'
+              priority: DISASTER
+            - uuid: 7f3052f9e7d440dd9b951cd2447061c0
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},temperature])>=55'
+              name: 'BBU on Adapter {#ADAPTER_ID}: Temperature critical ({ITEM.LASTVALUE}°C)'
+              priority: HIGH
+            - uuid: dc5d2694e64c409abaf8f78accff671f
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},temperature])>=45'
+              name: 'BBU on Adapter {#ADAPTER_ID}: Temperature warning ({ITEM.LASTVALUE}°C)'
+              priority: WARNING
+              dependencies:
+                - name: 'BBU on Adapter {#ADAPTER_ID}: Temperature critical ({ITEM.LASTVALUE}°C)'
+                  expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},temperature])>=55'
+            - uuid: 2773d100c32641789da99bf799264be6
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},capacitance])<50'
+              name: 'BBU on Adapter {#ADAPTER_ID}: Capacitance critical ({ITEM.LASTVALUE}%)'
+              priority: HIGH
+            - uuid: b86a013d5ca64f8aa3c5edcd88b0ec26
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},capacitance])<70'
+              name: 'BBU on Adapter {#ADAPTER_ID}: Capacitance low ({ITEM.LASTVALUE}%)'
+              priority: WARNING
+              dependencies:
+                - name: 'BBU on Adapter {#ADAPTER_ID}: Capacitance critical ({ITEM.LASTVALUE}%)'
+                  expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},capacitance])<50'
+            - uuid: 5f0642a29aeb4f7085eb70abbdec15a9
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},remaining_capacity_low])=1'
+              name: 'BBU on Adapter {#ADAPTER_ID}: Remaining capacity low'
+              priority: AVERAGE
+            - uuid: bb052b33bf7a4788a4d9b912f619ab78
+              expression: 'last(/MegaCLI by Agent 2/megacli.bbu[{#ADAPTER_ID},voltage])<8000'
+              name: 'BBU on Adapter {#ADAPTER_ID}: Voltage low ({ITEM.LASTVALUE}mV)'
+              priority: HIGH
+          graph_prototypes:
+            - uuid: 503d37cd3a644a4ca7e79e79c9d92f13
+              name: 'BBU on Adapter {#ADAPTER_ID}: Temperature and Capacitance'
+              graph_items:
+                - color: F63100
+                  item:
+                    host: 'MegaCLI by Agent 2'
+                    key: 'megacli.bbu[{#ADAPTER_ID},temperature]'
+                - color: 2774A4
+                  sortorder: '1'
+                  item:
+                    host: 'MegaCLI by Agent 2'
+                    key: 'megacli.bbu[{#ADAPTER_ID},capacitance]'
