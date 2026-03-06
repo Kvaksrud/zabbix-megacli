@@ -22,9 +22,13 @@ Bash-based MegaCLI RAID monitoring with Zabbix integration. Includes a standalon
 
 ### 1. Download and Install MegaCLI
 
-MegaCLI is not in the Ubuntu repos. Download the `.deb` package from Broadcom:
+MegaCLI is not in the Ubuntu repos. Broadcom ships it as an RPM, so use `alien` to convert it to a `.deb`:
 
 ```bash
+# Install alien
+sudo apt-get update
+sudo apt-get install -y alien unzip
+
 # Download MegaCLI
 wget https://docs.broadcom.com/docs-and-downloads/raid-controllers/raid-controllers-common-files/8-07-14_MegaCLI.zip
 
@@ -32,8 +36,8 @@ wget https://docs.broadcom.com/docs-and-downloads/raid-controllers/raid-controll
 unzip 8-07-14_MegaCLI.zip
 cd Linux/
 
-# Install the .deb (ships MegaCli64 to /opt/MegaRAID/MegaCli/)
-sudo dpkg -i MegaCli-8.07.14-1.noarch.deb
+# Convert the RPM to a .deb and install (ships MegaCli64 to /opt/MegaRAID/MegaCli/)
+sudo alien -i MegaCli-8.07.14-1.noarch.rpm
 ```
 
 > **Note:** If the Broadcom link is unavailable, search for `MegaCLI_8.07.14` on the
